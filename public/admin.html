@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard - RILL NitiPrint</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+      }
+      .modal-bg {
+        background-color: rgba(0, 0, 0, 0.5);
+        transition: opacity 0.3s ease;
+      }
+      .modal-content {
+        transition: transform 0.3s ease;
+      }
+      .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      /* Style untuk tombol filter yang aktif */
+      .branch-filter-btn.active-filter {
+        background-color: #4f46e5; /* indigo-600 */
+        color: white;
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1),
+          0 2px 4px -2px rgb(0 0 0 / 0.1);
+      }
+    </style>
+  </head>
+  <body class="bg-slate-100">
+    <header class="bg-white shadow-md">
+      <div
+        class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center"
+      >
+        <h1 class="text-2xl font-bold text-slate-800">Admin Dashboard</h1>
+      </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 space-y-8">
+      <div class="bg-white p-6 rounded-lg shadow-md">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-semibold">Daftar Pesanan</h2>
+          <div>
+            <button
+              id="bulk-delete-btn"
+              class="hidden bg-red-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-red-700 transition"
+            >
+              Hapus (<span id="selected-count">0</span>)
+            </button>
+            <button
+              id="refresh-btn"
+              class="bg-indigo-600 text-white p-2 rounded-md hover:bg-indigo-700 transition"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div id="branch-filters" class="flex items-center gap-2 mb-4">
+          <button
+            data-branch="All"
+            class="branch-filter-btn active-filter bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-700 transition"
+          >
+            Semua
+          </button>
+          <button
+            data-branch="NitiPrint Pegok"
+            class="branch-filter-btn bg-white text-slate-700 font-semibold py-2 px-4 rounded-md hover:bg-slate-100 transition border"
+          >
+            Pegok
+          </button>
+          <button
+            data-branch="NitiPrint Sidakarya"
+            class="branch-filter-btn bg-white text-slate-700 font-semibold py-2 px-4 rounded-md hover:bg-slate-100 transition border"
+          >
+            Sidakarya
+          </button>
+          <button
+            data-branch="NitiPrint Sesetan"
+            class="branch-filter-btn bg-white text-slate-700 font-semibold py-2 px-4 rounded-md hover:bg-slate-100 transition border"
+          >
+            Sesetan
+          </button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-slate-200">
+            <thead class="bg-slate-50">
+              <tr>
+                <th scope="col" class="p-4">
+                  <input
+                    type="checkbox"
+                    id="select-all-checkbox"
+                    class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                  />
+                </th>
+                <th
+                  scope="col"
+                  class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider"
+                >
+                  Order ID
+                </th>
+                <th
+                  scope="col"
+                  class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider"
+                >
+                  Pelanggan
+                </th>
+                <th
+                  scope="col"
+                  class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider"
+                >
+                  Total
+                </th>
+                <th
+                  scope="col"
+                  class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider"
+                >
+                  Status
+                </th>
+                <th
+                  scope="col"
+                  class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider"
+                >
+                  Waktu
+                </th>
+              </tr>
+            </thead>
+            <tbody
+              id="orders-table-body"
+              class="bg-white divide-y divide-slate-200"
+            ></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="bg-white p-6 rounded-lg shadow-md">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-semibold">Manajemen File Sementara</h2>
+          <div>
+            <button
+              id="bulk-delete-temp-btn"
+              class="hidden bg-red-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-red-700 transition"
+            >
+              Hapus (<span id="selected-temp-count">0</span>)
+            </button>
+            <button
+              id="refresh-temp-btn"
+              class="bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700 transition"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-slate-200">
+            <thead class="bg-slate-50">
+              <tr>
+                <th scope="col" class="p-4">
+                  <input
+                    type="checkbox"
+                    id="select-all-temp-checkbox"
+                    class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                  />
+                </th>
+                <th
+                  scope="col"
+                  class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider"
+                >
+                  Nama File
+                </th>
+                <th
+                  scope="col"
+                  class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider"
+                >
+                  Ukuran
+                </th>
+                <th
+                  scope="col"
+                  class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider"
+                >
+                  Tanggal Dibuat
+                </th>
+                <th
+                  scope="col"
+                  class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider"
+                >
+                  Aksi
+                </th>
+              </tr>
+            </thead>
+            <tbody
+              id="temp-files-table-body"
+              class="bg-white divide-y divide-slate-200"
+            ></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+
+    <div
+      id="detail-modal"
+      class="fixed inset-0 z-50 flex items-center justify-center modal-bg hidden opacity-0"
+    >
+      <div
+        id="modal-content"
+        class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto transform scale-95"
+      >
+        <div
+          class="sticky top-0 bg-white border-b p-4 flex justify-between items-center"
+        >
+          <h3 class="text-lg font-bold" id="modal-order-id"></h3>
+          <button
+            id="close-modal-btn"
+            class="text-slate-500 hover:text-slate-800"
+          >
+            &times;
+          </button>
+        </div>
+        <div class="p-6 space-y-6">
+          <div class="grid md:grid-cols-2 gap-6">
+            <div>
+              <h4 class="font-semibold text-slate-800 mb-2">Data Pelanggan</h4>
+              <p class="text-sm">
+                <strong class="text-slate-500">Nama:</strong>
+                <span id="modal-customer-name"></span>
+              </p>
+              <p class="text-sm">
+                <strong class="text-slate-500">No. WA:</strong>
+                <span id="modal-customer-phone"></span>
+              </p>
+            </div>
+            <div>
+              <h4 class="font-semibold text-slate-800 mb-2">Data File</h4>
+              <p class="text-sm">
+                <strong class="text-slate-500">File Asli:</strong>
+                <span id="modal-original-name" class="break-all"></span>
+              </p>
+              <button
+                id="download-pdf-btn"
+                class="mt-2 text-sm bg-indigo-100 text-indigo-700 font-semibold py-1 px-3 rounded-md hover:bg-indigo-200"
+              >
+                Unduh PDF
+              </button>
+            </div>
+          </div>
+          <div>
+            <h4 class="font-semibold text-slate-800 mb-2">Rincian Cetak</h4>
+            <div class="bg-slate-50 p-4 rounded-lg text-sm space-y-2">
+              <p>
+                <strong class="text-slate-500">Lokasi Ambil:</strong>
+                <span id="modal-pickup-location" class="font-bold"></span>
+              </p>
+              <p>
+                <strong class="text-slate-500">Mode Cetak:</strong>
+                <span id="modal-print-mode"></span>
+              </p>
+              <p>
+                <strong class="text-slate-500">Halaman Warna:</strong>
+                <span id="modal-color-pages"></span> (<span
+                  id="modal-color-range"
+                ></span
+                >)
+              </p>
+              <p>
+                <strong class="text-slate-500">Halaman B/W:</strong>
+                <span id="modal-bw-pages"></span> (<span
+                  id="modal-bw-range"
+                ></span
+                >)
+              </p>
+              <p>
+                <strong class="text-slate-500">Jumlah Rangkap:</strong>
+                <span id="modal-copies"></span>
+              </p>
+            </div>
+          </div>
+          <div>
+            <h4 class="font-semibold text-slate-800 mb-2">
+              Rincian Pembayaran
+            </h4>
+            <div class="grid md:grid-cols-2 gap-6">
+              <div class="bg-slate-50 p-4 rounded-lg text-sm space-y-2">
+                <p>
+                  <strong class="text-slate-500">Metode:</strong>
+                  <span id="modal-payment-method"></span>
+                </p>
+                <p>
+                  <strong class="text-slate-500">Total:</strong>
+                  <span
+                    id="modal-total-amount"
+                    class="font-bold text-lg text-indigo-700"
+                  ></span>
+                </p>
+              </div>
+              <div>
+                <p class="text-sm text-slate-500 mb-2">Bukti Pembayaran:</p>
+                <a id="modal-proof-link" href="#" target="_blank">
+                  <img
+                    id="modal-proof-img"
+                    class="max-h-40 rounded-md border shadow-sm cursor-pointer hover:opacity-80"
+                  />
+                </a>
+              </div>
+            </div>
+          </div>
+          <div>
+            <h4 class="font-semibold text-slate-800 mb-2">Aksi Admin</h4>
+            <div class="flex items-center gap-4">
+              <label for="status-select" class="text-sm font-medium"
+                >Ubah Status:</label
+              >
+              <select
+                id="status-select"
+                class="rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              >
+                <option value="pending_verification">Perlu Verifikasi</option>
+                <option value="verified">Terverifikasi</option>
+                <option value="printing">Proses Cetak</option>
+                <option value="done">Selesai</option>
+                <option value="cancelled">Dibatalkan</option>
+              </select>
+              <button
+                id="save-status-btn"
+                class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-700"
+              >
+                Simpan
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // --- Elemen DOM untuk Pesanan ---
+        const ordersTableBody = document.getElementById("orders-table-body");
+        const detailModal = document.getElementById("detail-modal");
+        const modalContent = document.getElementById("modal-content");
+        const closeModalBtn = document.getElementById("close-modal-btn");
+        const refreshBtn = document.getElementById("refresh-btn");
+        const saveStatusBtn = document.getElementById("save-status-btn");
+        const bulkDeleteBtn = document.getElementById("bulk-delete-btn");
+        const selectedCountSpan = document.getElementById("selected-count");
+        const selectAllCheckbox = document.getElementById(
+          "select-all-checkbox"
+        );
+        const branchFilterContainer = document.getElementById("branch-filters");
+
+        let currentOrder = null;
+        let allOrders = [];
+        let activeBranchFilter = "All"; // Menyimpan filter yang aktif
+
+        // --- Elemen DOM untuk File Sementara ---
+        const tempFilesTableBody = document.getElementById(
+          "temp-files-table-body"
+        );
+        const refreshTempBtn = document.getElementById("refresh-temp-btn");
+        const selectAllTempCheckbox = document.getElementById(
+          "select-all-temp-checkbox"
+        );
+        const bulkDeleteTempBtn = document.getElementById(
+          "bulk-delete-temp-btn"
+        );
+        const selectedTempCountSpan = document.getElementById(
+          "selected-temp-count"
+        );
+
+        const statusColors = {
+          pending_verification: "bg-yellow-100 text-yellow-800",
+          verified: "bg-blue-100 text-blue-800",
+          printing: "bg-purple-100 text-purple-800",
+          done: "bg-green-100 text-green-800",
+          cancelled: "bg-red-100 text-red-800",
+        };
+
+        const formatRupiah = (number) =>
+          new Intl.NumberFormat("id-ID", {
+            style: "currency",
+            currency: "IDR",
+            minimumFractionDigits: 0,
+          }).format(number);
+
+        const formatDate = (isoString) =>
+          new Date(isoString).toLocaleString("id-ID", {
+            dateStyle: "medium",
+            timeStyle: "short",
+          });
+
+        const formatBytes = (bytes, decimals = 2) => {
+          if (!bytes) return "0 Bytes";
+          const k = 1024;
+          const dm = decimals < 0 ? 0 : decimals;
+          const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
+          const i = Math.floor(Math.log(bytes) / Math.log(k));
+          return (
+            parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i]
+          );
+        };
+
+        // ===================================
+        // --- LOGIKA UNTUK DAFTAR PESANAN ---
+        // ===================================
+
+        const fetchOrders = async () => {
+          try {
+            ordersTableBody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-slate-500">Memuat data pesanan...</td></tr>`;
+
+            const url = `/api/admin/orders?branch=${encodeURIComponent(
+              activeBranchFilter
+            )}`;
+            const response = await fetch(url);
+
+            if (response.status === 401) {
+              alert("Akses Ditolak. Harap login.");
+              return;
+            }
+            if (!response.ok) {
+              const err = await response.json();
+              throw new Error(err.error || "Gagal mengambil data pesanan.");
+            }
+
+            allOrders = await response.json();
+            renderTable(allOrders);
+            updateBulkDeleteButton();
+          } catch (error) {
+            ordersTableBody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-red-500">${error.message}</td></tr>`;
+          }
+        };
+
+        const renderTable = (orders) => {
+          if (orders.length === 0) {
+            ordersTableBody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-slate-500">Belum ada pesanan untuk cabang ini.</td></tr>`;
+            return;
+          }
+          ordersTableBody.innerHTML = orders
+            .map(
+              (order) => `
+                    <tr class="hover:bg-slate-50" data-order-id="${
+                      order.orderId
+                    }">
+                        <td class="p-4">
+                            <input type="checkbox" class="order-checkbox h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" value="${
+                              order.orderId
+                            }">
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-slate-700 cursor-pointer">${
+                          order.orderId
+                        }</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-800 cursor-pointer">${
+                          order.customerName
+                        }</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-800 cursor-pointer">${formatRupiah(
+                          order.grossAmount
+                        )}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm cursor-pointer">
+                            <span class="status-badge ${
+                              statusColors[order.status] ||
+                              "bg-gray-100 text-gray-800"
+                            }">${(order.status || "N/A").replace(
+                /_/g,
+                " "
+              )}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 cursor-pointer">${formatDate(
+                          order.transactionTime
+                        )}</td>
+                    </tr>
+                `
+            )
+            .join("");
+        };
+
+        const updateBulkDeleteButton = () => {
+          const selectedCheckboxes = document.querySelectorAll(
+            ".order-checkbox:checked"
+          );
+          const count = selectedCheckboxes.length;
+          selectedCountSpan.textContent = count;
+          if (count > 0) {
+            bulkDeleteBtn.classList.remove("hidden");
+          } else {
+            bulkDeleteBtn.classList.add("hidden");
+          }
+          selectAllCheckbox.checked = count > 0 && count === allOrders.length;
+        };
+
+        const openModal = (orderId) => {
+          currentOrder = allOrders.find((o) => o.orderId === orderId);
+          if (!currentOrder) return;
+
+          document.getElementById(
+            "modal-order-id"
+          ).textContent = `Detail: ${currentOrder.orderId}`;
+          document.getElementById("modal-customer-name").textContent =
+            currentOrder.customerName;
+          document.getElementById("modal-customer-phone").textContent =
+            currentOrder.customerPhone;
+          document.getElementById("modal-original-name").textContent =
+            currentOrder.originalName;
+
+          // Menambahkan data lokasi dan mode cetak ke modal
+          document.getElementById("modal-pickup-location").textContent =
+            currentOrder.pickupLocation;
+          document.getElementById("modal-print-mode").textContent =
+            currentOrder.printMode === "grayscale"
+              ? "Semua Hitam Putih"
+              : "Normal";
+
+          document.getElementById("modal-color-pages").textContent =
+            currentOrder.colorPages;
+          document.getElementById("modal-color-range").textContent =
+            currentOrder.colorPageRange;
+          document.getElementById("modal-bw-pages").textContent =
+            currentOrder.bwPages;
+          document.getElementById("modal-bw-range").textContent =
+            currentOrder.grayscalePageRange;
+          document.getElementById("modal-copies").textContent =
+            currentOrder.copies;
+          document.getElementById("modal-payment-method").textContent =
+            currentOrder.paymentMethod.toUpperCase();
+          document.getElementById("modal-total-amount").textContent =
+            formatRupiah(currentOrder.grossAmount);
+
+          const proofUrl = `/proofs/${currentOrder.proofPath}`;
+          document.getElementById("modal-proof-img").src = proofUrl;
+          document.getElementById("modal-proof-link").href = proofUrl;
+
+          document.getElementById("download-pdf-btn").onclick = () => {
+            window.location.href = `/download/order/${currentOrder.orderId}`;
+          };
+
+          document.getElementById("status-select").value = currentOrder.status;
+
+          detailModal.classList.remove("hidden");
+          setTimeout(() => {
+            detailModal.classList.remove("opacity-0");
+            modalContent.classList.remove("scale-95");
+          }, 10);
+        };
+
+        const closeModal = () => {
+          detailModal.classList.add("opacity-0");
+          modalContent.classList.add("scale-95");
+          setTimeout(() => {
+            detailModal.classList.add("hidden");
+            currentOrder = null;
+          }, 300);
+        };
+
+        const saveStatus = async () => {
+          if (!currentOrder) return;
+          const newStatus = document.getElementById("status-select").value;
+          try {
+            const response = await fetch(
+              `/api/admin/orders/${currentOrder.orderId}/status`,
+              {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ status: newStatus }),
+              }
+            );
+            if (!response.ok) throw new Error("Gagal menyimpan status.");
+
+            alert("Status berhasil diperbarui!");
+            fetchOrders();
+            closeModal();
+          } catch (error) {
+            alert(error.message);
+          }
+        };
+
+        const handleBulkDelete = async () => {
+          const selectedCheckboxes = document.querySelectorAll(
+            ".order-checkbox:checked"
+          );
+          const orderIdsToDelete = Array.from(selectedCheckboxes).map(
+            (cb) => cb.value
+          );
+
+          if (orderIdsToDelete.length === 0) {
+            alert("Tidak ada pesanan yang dipilih.");
+            return;
+          }
+
+          if (
+            confirm(
+              `Apakah Anda yakin ingin menghapus ${orderIdsToDelete.length} pesanan? Tindakan ini tidak dapat dibatalkan.`
+            )
+          ) {
+            try {
+              const response = await fetch("/api/admin/orders/bulk", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ orderIds: orderIdsToDelete }),
+              });
+              const result = await response.json();
+              if (!response.ok)
+                throw new Error(result.error || "Gagal menghapus pesanan.");
+
+              alert(result.message);
+              fetchOrders();
+            } catch (error) {
+              alert(`Terjadi kesalahan: ${error.message}`);
+            }
+          }
+        };
+
+        // ===========================================
+        // --- LOGIKA UNTUK MANAJEMEN FILE SEMENTARA ---
+        // ===========================================
+
+        const fetchTempFiles = async () => {
+          try {
+            tempFilesTableBody.innerHTML = `<tr><td colspan="5" class="text-center p-8 text-slate-500">Memuat data file sementara...</td></tr>`;
+            const response = await fetch("/api/admin/temp-files");
+            if (!response.ok)
+              throw new Error("Gagal mengambil data file sementara.");
+            const files = await response.json();
+            renderTempFilesTable(files);
+          } catch (error) {
+            tempFilesTableBody.innerHTML = `<tr><td colspan="5" class="text-center p-8 text-red-500">${error.message}</td></tr>`;
+          }
+        };
+
+        const renderTempFilesTable = (files) => {
+          if (files.length === 0) {
+            tempFilesTableBody.innerHTML = `<tr><td colspan="5" class="text-center p-8 text-slate-500">Tidak ada file sementara.</td></tr>`;
+            return;
+          }
+          tempFilesTableBody.innerHTML = files
+            .map(
+              (file) => `
+                <tr class="hover:bg-slate-50">
+                    <td class="p-4">
+                        <input type="checkbox" class="temp-file-checkbox h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" value="${
+                          file.path
+                        }">
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-slate-700">${
+                      file.name
+                    }</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-800">${formatBytes(
+                      file.size
+                    )}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">${formatDate(
+                      file.createdAt
+                    )}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <button class="delete-temp-btn text-red-600 hover:text-red-800 font-semibold" data-path="${
+                          file.path
+                        }">Hapus</button>
+                    </td>
+                </tr>
+            `
+            )
+            .join("");
+          updateBulkDeleteTempButton();
+        };
+
+        const updateBulkDeleteTempButton = () => {
+          const selectedCheckboxes = document.querySelectorAll(
+            ".temp-file-checkbox:checked"
+          );
+          const count = selectedCheckboxes.length;
+          selectedTempCountSpan.textContent = count;
+          if (count > 0) {
+            bulkDeleteTempBtn.classList.remove("hidden");
+          } else {
+            bulkDeleteTempBtn.classList.add("hidden");
+          }
+          selectAllTempCheckbox.checked =
+            count > 0 &&
+            count === document.querySelectorAll(".temp-file-checkbox").length;
+        };
+
+        const handleBulkDeleteTemp = async () => {
+          const selectedCheckboxes = document.querySelectorAll(
+            ".temp-file-checkbox:checked"
+          );
+          const pathsToDelete = Array.from(selectedCheckboxes).map(
+            (cb) => cb.value
+          );
+
+          if (pathsToDelete.length === 0) {
+            alert("Tidak ada file yang dipilih.");
+            return;
+          }
+
+          if (
+            confirm(
+              `Apakah Anda yakin ingin menghapus ${pathsToDelete.length} file sementara?`
+            )
+          ) {
+            try {
+              const response = await fetch("/api/admin/temp-files/delete", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ filePaths: pathsToDelete }),
+              });
+              const result = await response.json();
+              if (!response.ok)
+                throw new Error(result.message || "Gagal menghapus file.");
+
+              alert(result.message);
+              fetchTempFiles();
+            } catch (error) {
+              alert(`Terjadi kesalahan: ${error.message}`);
+            }
+          }
+        };
+
+        // ======================
+        // --- EVENT LISTENERS ---
+        // ======================
+
+        branchFilterContainer.addEventListener("click", (e) => {
+          if (e.target.matches(".branch-filter-btn")) {
+            const selectedBranch = e.target.dataset.branch;
+            activeBranchFilter = selectedBranch;
+
+            document.querySelectorAll(".branch-filter-btn").forEach((btn) => {
+              btn.classList.remove("active-filter");
+            });
+            e.target.classList.add("active-filter");
+
+            fetchOrders();
+          }
+        });
+
+        ordersTableBody.addEventListener("click", (e) => {
+          const row = e.target.closest("tr");
+          if (!row) return;
+          if (!e.target.matches('input[type="checkbox"]')) {
+            if (row.dataset.orderId) openModal(row.dataset.orderId);
+          } else {
+            updateBulkDeleteButton();
+          }
+        });
+
+        selectAllCheckbox.addEventListener("change", (e) => {
+          document.querySelectorAll(".order-checkbox").forEach((checkbox) => {
+            checkbox.checked = e.target.checked;
+          });
+          updateBulkDeleteButton();
+        });
+
+        closeModalBtn.addEventListener("click", closeModal);
+        detailModal.addEventListener("click", (e) => {
+          if (e.target === detailModal) closeModal();
+        });
+        refreshBtn.addEventListener("click", fetchOrders);
+        saveStatusBtn.addEventListener("click", saveStatus);
+        bulkDeleteBtn.addEventListener("click", handleBulkDelete);
+
+        refreshTempBtn.addEventListener("click", fetchTempFiles);
+        selectAllTempCheckbox.addEventListener("change", (e) => {
+          document
+            .querySelectorAll(".temp-file-checkbox")
+            .forEach((checkbox) => {
+              checkbox.checked = e.target.checked;
+            });
+          updateBulkDeleteTempButton();
+        });
+
+        tempFilesTableBody.addEventListener("click", (e) => {
+          if (e.target.classList.contains("delete-temp-btn")) {
+            const filePath = e.target.dataset.path;
+            if (confirm(`Yakin ingin menghapus file: ${filePath}?`)) {
+              handleBulkDeleteTemp([filePath]);
+            }
+          } else if (e.target.matches("input.temp-file-checkbox")) {
+            updateBulkDeleteTempButton();
+          }
+        });
+
+        bulkDeleteTempBtn.addEventListener("click", handleBulkDeleteTemp);
+
+        // --- Initial fetch ---
+        fetchOrders();
+        fetchTempFiles();
+      });
+    </script>
+  </body>
+</html>

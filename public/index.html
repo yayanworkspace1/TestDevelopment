@@ -1,0 +1,1259 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cetak PDF Otomatis - Pembayaran Manual</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      :root {
+        --primary-color: #4f46e5;
+        --secondary-color: #e5e7eb;
+        --background-color: #f9fafb;
+        --text-color-light: #ffffff;
+        --text-color-dark: #374151;
+        --transition-speed: 0.5s;
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      /* CSS untuk Stepper Baru */
+      .stepper-item .step-counter {
+        background-color: var(--secondary-color);
+        color: #9ca3af; /* gray-400 */
+        transition: all var(--transition-speed) ease;
+      }
+      .stepper-item.active .step-counter {
+        background-color: var(--primary-color);
+        color: var(--text-color-light);
+        box-shadow: 0 0 0 4px #c7d2fe; /* indigo-200 */
+      }
+      .stepper-item.completed .step-counter {
+        background-color: var(--primary-color);
+        color: var(--text-color-light);
+      }
+      .stepper-item .step-name {
+        color: #6b7280; /* gray-500 */
+        transition: all var(--transition-speed) ease;
+      }
+      .stepper-item.active .step-name {
+        color: var(--primary-color);
+        font-weight: 600;
+      }
+      .stepper-item.completed .step-name {
+        color: var(--text-color-dark);
+      }
+      .stepper-line {
+        transition: all var(--transition-speed) ease;
+        background-color: var(--secondary-color);
+      }
+      .stepper-line.completed {
+        background-color: var(--primary-color);
+      }
+      /* Akhir CSS Stepper Baru */
+
+      .gradient-header {
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+      }
+
+      @keyframes slide-in-bottom {
+        0% {
+          transform: translateY(100%);
+          opacity: 0;
+        }
+        100% {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+      .notification {
+        animation: slide-in-bottom 0.5s ease-in-out forwards;
+      }
+      @keyframes fade-in {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .fade-in-animate {
+        animation: fade-in 0.5s ease-in-out forwards;
+      }
+      @keyframes fade-in {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .fade-in-animate {
+        animation: fade-in 0.5s ease-in-out forwards;
+      }
+      .branch-card {
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+      }
+      .branch-card.selected {
+        border-color: #4f46e5;
+        box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1),
+          0 4px 6px -4px rgb(0 0 0 / 0.1);
+        transform: translateY(-5px);
+      }
+      .branch-card iframe {
+        border-radius: 0.5rem;
+      }
+    </style>
+  </head>
+  <body class="bg-slate-50">
+    <div class="min-h-screen flex flex-col">
+      <!-- Header Section -->
+      <header
+        class="gradient-header text-white p-8 md:p-12 text-center shadow-lg"
+      >
+        <div class="max-w-4xl mx-auto">
+          <div class="inline-block bg-white/20 p-3 rounded-xl mb-4">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="lucide lucide-file-text"
+            >
+              <path
+                d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"
+              />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="16" x2="8" y1="13" y2="13" />
+              <line x1="16" x2="8" y1="17" y2="17" />
+              <line x1="10" x2="8" y1="9" y2="9" />
+            </svg>
+          </div>
+          <h1 class="text-3xl md:text-4xl font-extrabold">
+            Print PDF Otomatis
+          </h1>
+          <p class="mt-2 text-lg text-indigo-200 max-w-2xl mx-auto">
+            Upload PDF Anda, dapatkan analisis warna otomatis, dan bayar dengan
+            mudah. Hasil print akan diproses langsung oleh admin kami!
+          </p>
+        </div>
+      </header>
+
+      <!-- Main Content -->
+      <main class="flex-grow container mx-auto p-4 md:p-8">
+        <div class="max-w-4xl mx-auto">
+          <!-- PERUBAHAN: Stepper Horizontal Tetap -->
+          <div
+            id="stepper-container"
+            class="relative mb-12 w-full max-w-2xl mx-auto"
+          >
+            <div class="absolute top-6 left-0 w-full h-1 -z-10">
+              <div class="absolute w-full h-full bg-slate-200"></div>
+              <div
+                id="progress-fill"
+                class="absolute h-full bg-indigo-500 transition-all duration-500"
+                style="width: 0%"
+              ></div>
+            </div>
+
+            <div class="flex items-center justify-between">
+              <div class="stepper-item text-center w-1/3" data-step="1">
+                <div
+                  class="step-counter relative mx-auto w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg bg-white"
+                >
+                  1
+                </div>
+                <div class="step-name mt-2 font-medium text-sm md:text-base">
+                  Upload File
+                </div>
+              </div>
+              <div class="stepper-item text-center w-1/3" data-step="2">
+                <div
+                  class="step-counter relative mx-auto w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg bg-white"
+                >
+                  2
+                </div>
+                <div class="step-name mt-2 font-medium text-sm md:text-base">
+                  Data & Pembayaran
+                </div>
+              </div>
+              <div class="stepper-item text-center w-1/3" data-step="3">
+                <div
+                  class="step-counter relative mx-auto w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg bg-white"
+                >
+                  3
+                </div>
+                <div class="step-name mt-2 font-medium text-sm md:text-base">
+                  Selesai
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 1: Upload Section -->
+          <div id="upload-step" class="fade-in-animate">
+            <div class="bg-white p-8 rounded-2xl shadow-md">
+              <h2 class="text-2xl font-bold text-slate-800 text-center">
+                Upload File PDF
+              </h2>
+              <p class="text-slate-500 text-center mt-1">
+                Drag & drop file PDF Anda atau klik untuk memilih file.
+              </p>
+              <div
+                id="drop-area"
+                class="mt-6 border-2 border-dashed border-slate-300 rounded-xl p-8 md:p-16 text-center transition-all duration-300 bg-slate-50"
+              >
+                <div
+                  class="flex flex-col items-center justify-center space-y-4 text-slate-500"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="48"
+                    height="48"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="text-indigo-500 lucide lucide-upload-cloud"
+                  >
+                    <path
+                      d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"
+                    />
+                    <path d="M12 12v9" />
+                    <path d="m16 16-4-4-4 4" />
+                  </svg>
+                  <p class="font-semibold">Pilih atau drag file PDF ke sini</p>
+                  <p class="text-sm">Maksimal 25MB.</p>
+                  <button
+                    id="file-btn"
+                    class="mt-4 bg-indigo-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-indigo-700 transition-all duration-300 shadow-sm hover:shadow-md"
+                  >
+                    Pilih File PDF
+                  </button>
+                  <input
+                    type="file"
+                    id="pdfFile"
+                    class="hidden"
+                    accept=".pdf"
+                  />
+                </div>
+              </div>
+              <div id="upload-status" class="text-center mt-4 h-6"></div>
+            </div>
+          </div>
+
+          <!-- Step 2: Details Section -->
+          <div id="details-step" class="hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div
+                class="lg:col-span-2 bg-white p-8 rounded-2xl shadow-md space-y-8 fade-in-animate"
+              >
+                <div>
+                  <h2 class="text-2xl font-bold text-slate-800">
+                    Rincian Pesanan
+                  </h2>
+                  <div
+                    class="mt-4 p-4 bg-slate-50 rounded-lg border text-sm space-y-3"
+                  >
+                    <div>
+                      <p class="font-semibold text-slate-600">Nama File:</p>
+                      <p
+                        id="display-filename"
+                        class="text-slate-800 break-all mt-1"
+                      ></p>
+                    </div>
+                    <div class="border-t"></div>
+                    <div>
+                      <p class="font-semibold text-slate-600">Halaman Warna:</p>
+                      <p
+                        id="display-color-range"
+                        class="text-rose-700 font-mono mt-1 break-words"
+                      ></p>
+                    </div>
+                    <div class="border-t"></div>
+                    <div>
+                      <p class="font-semibold text-slate-600">Halaman B/W:</p>
+                      <p
+                        id="display-bw-range"
+                        class="text-slate-700 font-mono mt-1 break-words"
+                      ></p>
+                    </div>
+                  </div>
+                  <div class="mt-6 grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <div
+                      class="bg-rose-50 border border-rose-200 p-4 rounded-xl text-center"
+                    >
+                      <p class="text-sm font-medium text-rose-600">
+                        Jumlah Warna
+                      </p>
+                      <p
+                        id="color-pages-count"
+                        class="text-2xl font-bold text-rose-800"
+                      >
+                        0
+                      </p>
+                    </div>
+                    <div
+                      class="bg-slate-100 border border-slate-200 p-4 rounded-xl text-center"
+                    >
+                      <p class="text-sm font-medium text-slate-600">
+                        Jumlah B/W
+                      </p>
+                      <p
+                        id="bw-pages-count"
+                        class="text-2xl font-bold text-slate-800"
+                      >
+                        0
+                      </p>
+                    </div>
+                    <div
+                      class="col-span-2 md:col-span-1 bg-indigo-50 border border-indigo-200 p-4 rounded-xl text-center"
+                    >
+                      <p class="text-sm font-medium text-indigo-600">
+                        Total Halaman
+                      </p>
+                      <p
+                        id="total-pages-count"
+                        class="text-2xl font-bold text-indigo-800"
+                      >
+                        0
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div class="bg-slate-50 p-4 rounded-lg border">
+                  <label class="flex items-center cursor-pointer"
+                    ><input
+                      type="checkbox"
+                      id="grayscale-mode-checkbox"
+                      class="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                    /><span class="ml-3 text-slate-700 font-medium"
+                      >Cetak Semua sebagai Hitam Putih</span
+                    ></label
+                  >
+                  <p class="text-xs text-slate-500 ml-8 mt-1">
+                    Pilih ini untuk menghemat biaya. Semua halaman, termasuk
+                    yang berwarna, akan dicetak hitam putih.
+                  </p>
+                </div>
+                <div>
+                  <h2 class="text-2xl font-bold text-slate-800">
+                    Data Pelanggan
+                  </h2>
+                  <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label
+                        for="name"
+                        class="block text-sm font-medium text-slate-700"
+                        >Nama Lengkap</label
+                      ><input
+                        type="text"
+                        id="name"
+                        class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                        placeholder="Masukkan nama Anda"
+                      />
+                    </div>
+                    <div>
+                      <label
+                        for="phone"
+                        class="block text-sm font-medium text-slate-700"
+                        >Nomor WhatsApp</label
+                      ><input
+                        type="tel"
+                        id="phone"
+                        class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                        placeholder="Contoh: 081234567890"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <h2 class="text-2xl font-bold text-slate-800">
+                    Pilih Lokasi Pengambilan
+                  </h2>
+                  <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div
+                      class="branch-card bg-slate-50 p-4 rounded-xl cursor-pointer border-2 border-slate-200"
+                      data-branch-name="NitiPrint Pegok"
+                    >
+                      <h3 class="font-bold text-slate-800">NitiPrint Pegok</h3>
+                      <p class="text-xs text-slate-500 mt-1 mb-3">
+                        Jl. Raya Sesetan No. 252 (Depan McD Sesetan)
+                      </p>
+                      <iframe
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3943.626217208759!2d115.2222833152367!3d-8.72581999141088!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2dd24198c62c3827%3A0x89a023632e06a53!2sMcDonald's%20Sesetan!5e0!3m2!1sen!2sid!4v1691742938225!5m2!1sen!2sid"
+                        width="100%"
+                        height="120"
+                        style="border: 0"
+                        allowfullscreen=""
+                        loading="lazy"
+                        referrerpolicy="no-referrer-when-downgrade"
+                      ></iframe>
+                    </div>
+                    <div
+                      class="branch-card bg-slate-50 p-4 rounded-xl cursor-pointer border-2 border-slate-200"
+                      data-branch-name="NitiPrint Sidakarya"
+                    >
+                      <h3 class="font-bold text-slate-800">
+                        NitiPrint Sidakarya
+                      </h3>
+                      <p class="text-xs text-slate-500 mt-1 mb-3">
+                        Jl. Pendidikan No. 1A (Dekat Perempatan Sidakarya)
+                      </p>
+                      <iframe
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3943.740882191494!2d115.2346133152366!3d-8.71536999134983!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2dd241a5005b709f%3A0x46fb19430917382d!2sJl.%20Pendidikan%20No.1a%2C%20Sidakarya%2C%20Denpasar%20Selatan%2C%20Kota%20Denpasar%2C%20Bali%2080224!5e0!3m2!1sen!2sid!4v1691743118123!5m2!1sen!2sid"
+                        width="100%"
+                        height="120"
+                        style="border: 0"
+                        allowfullscreen=""
+                        loading="lazy"
+                        referrerpolicy="no-referrer-when-downgrade"
+                      ></iframe>
+                    </div>
+                    <div
+                      class="branch-card bg-slate-50 p-4 rounded-xl cursor-pointer border-2 border-slate-200"
+                      data-branch-name="NitiPrint Sesetan"
+                    >
+                      <h3 class="font-bold text-slate-800">
+                        NitiPrint Sesetan
+                      </h3>
+                      <p class="text-xs text-slate-500 mt-1 mb-3">
+                        Jl. Raya Sesetan 202A (Samping Pulau HP)
+                      </p>
+                      <iframe
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3943.681186715209!2d115.22108641523666!3d-8.72076999138612!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2dd2419b18a21397%3A0x13a6971a88f86f76!2sJl.%20Raya%20Sesetan%20No.202a%2C%20Sesetan%2C%20Denpasar%20Selatan%2C%20Kota%20Denpasar%2C%20Bali!5e0!3m2!1sen!2sid!4v1691743224851!5m2!1sen!2sid"
+                        width="100%"
+                        height="120"
+                        style="border: 0"
+                        allowfullscreen=""
+                        loading="lazy"
+                        referrerpolicy="no-referrer-when-downgrade"
+                      ></iframe>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div
+                class="lg:col-span-1 space-y-6 fade-in-animate"
+                style="animation-delay: 0.2s"
+              >
+                <div class="bg-white p-6 rounded-2xl shadow-md">
+                  <h3 class="text-lg font-bold text-slate-800">
+                    Jumlah Rangkap
+                  </h3>
+                  <div class="flex items-center justify-between mt-4">
+                    <button
+                      id="decr-copies"
+                      class="w-10 h-10 bg-slate-200 text-slate-600 rounded-md font-bold text-xl hover:bg-slate-300 transition"
+                    >
+                      -</button
+                    ><input
+                      type="text"
+                      id="copies"
+                      value="1"
+                      class="w-16 text-center font-bold text-lg border-0 focus:ring-0"
+                    /><button
+                      id="incr-copies"
+                      class="w-10 h-10 bg-slate-200 text-slate-600 rounded-md font-bold text-xl hover:bg-slate-300 transition"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+                <div class="bg-indigo-600 text-white p-6 rounded-2xl shadow-lg">
+                  <p class="text-indigo-200 font-semibold">Rincian Biaya</p>
+                  <div class="mt-3 space-y-1 text-sm">
+                    <div class="flex justify-between">
+                      <span class="text-indigo-200">Subtotal Print</span
+                      ><span id="subtotal-print" class="font-medium">Rp 0</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-indigo-200">Biaya Admin</span
+                      ><span id="admin-fee" class="font-medium">Rp 0</span>
+                    </div>
+                  </div>
+                  <div class="border-t border-indigo-400 my-3"></div>
+                  <div class="flex justify-between items-center">
+                    <p class="text-indigo-100 text-lg">Total</p>
+                    <p id="final-total" class="text-3xl font-extrabold">Rp 0</p>
+                  </div>
+                  <button
+                    id="proceed-to-payment-btn"
+                    class="mt-6 w-full bg-white text-indigo-600 font-bold py-3 px-4 rounded-lg hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-indigo-600 focus:ring-white transition duration-150 ease-in-out"
+                  >
+                    Lanjut ke Pembayaran
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 3: Manual Payment Section -->
+          <div id="manual-payment-step" class="hidden">
+            <div class="bg-white p-8 rounded-2xl shadow-md fade-in-animate">
+              <h2 class="text-2xl font-bold text-slate-800 text-center">
+                Lakukan Pembayaran Manual
+              </h2>
+              <p class="text-slate-500 text-center mt-1 mb-6">
+                Silakan transfer sejumlah total tagihan ke salah satu tujuan
+                berikut.
+              </p>
+
+              <div class="grid md:grid-cols-2 gap-6">
+                <!-- Payment Info -->
+                <div>
+                  <div class="space-y-4">
+                    <div>
+                      <label class="flex items-center space-x-3 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="paymentMethod"
+                          value="bca"
+                          class="form-radio h-5 w-5 text-indigo-600"
+                          checked
+                        />
+                        <span class="font-semibold text-slate-700"
+                          >Transfer Bank BCA</span
+                        >
+                      </label>
+                    </div>
+                    <div>
+                      <label class="flex items-center space-x-3 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="paymentMethod"
+                          value="qris"
+                          class="form-radio h-5 w-5 text-indigo-600"
+                        />
+                        <span class="font-semibold text-slate-700">QRIS</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <!-- BCA Details -->
+                  <div
+                    id="bca-details"
+                    class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg"
+                  >
+                    <p class="text-sm text-blue-800">Nomor Rekening BCA:</p>
+                    <p class="text-lg font-bold text-blue-900">7445459038</p>
+                    <p class="text-sm text-blue-800 mt-1">
+                      a.n. I Wayan Sudana Dyaksa
+                    </p>
+                  </div>
+
+                  <!-- QRIS Details -->
+                  <div
+                    id="qris-details"
+                    class="mt-4 p-4 bg-gray-100 border border-gray-200 rounded-lg hidden"
+                  >
+                    <p class="text-sm text-gray-800 mb-2">
+                      Scan QR Code di bawah ini:
+                    </p>
+                    <img
+                      src="assets/qris-code.png"
+                      alt="QRIS Code"
+                      class="mx-auto rounded-md"
+                    />
+                  </div>
+
+                  <div class="mt-6 space-y-3">
+                    <div
+                      class="flex justify-between items-center bg-slate-100 p-3 rounded-lg"
+                    >
+                      <div>
+                        <p class="text-xs text-slate-500">
+                          Order ID (untuk berita transfer)
+                        </p>
+                        <p
+                          id="display-order-id"
+                          class="font-mono font-bold text-slate-800"
+                        ></p>
+                      </div>
+                      <button
+                        onclick="copyToClipboard('display-order-id')"
+                        class="bg-slate-200 hover:bg-slate-300 text-slate-600 text-xs font-semibold py-1 px-3 rounded"
+                      >
+                        Salin
+                      </button>
+                    </div>
+                    <div
+                      class="flex justify-between items-center bg-slate-100 p-3 rounded-lg"
+                    >
+                      <div>
+                        <p class="text-xs text-slate-500">Total Tagihan</p>
+                        <p
+                          id="display-total-amount"
+                          class="font-mono font-bold text-slate-800"
+                        ></p>
+                      </div>
+                      <button
+                        onclick="copyToClipboard('display-total-amount', true)"
+                        class="bg-slate-200 hover:bg-slate-300 text-slate-600 text-xs font-semibold py-1 px-3 rounded"
+                      >
+                        Salin
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Upload Proof -->
+                <div>
+                  <h3 class="font-semibold text-slate-700 mb-2">
+                    Upload Bukti Transfer
+                  </h3>
+                  <div
+                    id="proof-drop-area"
+                    class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center transition-all duration-300 bg-slate-50"
+                  >
+                    <div
+                      id="proof-upload-placeholder"
+                      class="flex flex-col items-center justify-center space-y-2 text-slate-500"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="32"
+                        height="32"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        class="lucide lucide-image-up"
+                      >
+                        <path
+                          d="M10.3 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10l-3.1-3.1a2 2 0 0 0-2.814.014L13 16"
+                        />
+                        <path d="m16 5-2.5 2.5" />
+                        <path d="M18 21v-6h6" />
+                        <path d="M21 18h-6" />
+                        <circle cx="5" cy="5" r="1" />
+                      </svg>
+                      <p class="text-sm font-semibold">
+                        Pilih atau drag file gambar
+                      </p>
+                      <p class="text-xs">PNG, JPG, JPEG</p>
+                    </div>
+                    <div id="proof-preview-container" class="hidden">
+                      <img
+                        id="proof-preview-img"
+                        class="max-h-40 mx-auto rounded-md"
+                      />
+                      <p
+                        id="proof-filename"
+                        class="text-xs mt-2 text-slate-600"
+                      ></p>
+                    </div>
+                  </div>
+                  <input
+                    type="file"
+                    id="proof-upload-input"
+                    class="hidden"
+                    accept="image/png, image/jpeg, image/jpg"
+                  />
+
+                  <button
+                    id="finish-payment-btn"
+                    class="mt-6 w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 disabled:bg-indigo-300 disabled:cursor-not-allowed transition duration-150 ease-in-out"
+                  >
+                    Selesai & Kirim Bukti
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 4: Payment Success Section -->
+          <div
+            id="success-step"
+            class="hidden text-center bg-white p-10 rounded-2xl shadow-md fade-in-animate"
+          >
+            <div
+              class="inline-block bg-green-100 text-green-600 p-4 rounded-full"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="48"
+                height="48"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+              </svg>
+            </div>
+            <h2 class="mt-6 text-3xl font-bold text-slate-800">
+              Pesanan Terkirim!
+            </h2>
+            <p class="mt-2 text-slate-500 max-w-lg mx-auto">
+              Terima kasih! Pesanan Anda telah kami terima dan akan segera
+              diproses setelah pembayaran divalidasi. Silakan cek WhatsApp Anda
+              untuk konfirmasi.
+            </p>
+            <button
+              id="new-order-btn"
+              class="mt-8 bg-indigo-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-indigo-700 transition-all duration-300 shadow-sm hover:shadow-md"
+            >
+              Buat Pesanan Baru
+            </button>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Notifikasi -->
+    <div
+      id="notification-container"
+      class="fixed bottom-5 right-5 w-80 z-50"
+    ></div>
+
+    <script>
+      // --- KONFIGURASI ---
+      const HARGA_WARNA = 2000;
+      const HARGA_BW = 500;
+      const BIAYA_ADMIN = 2000;
+      const API_URL = ""; // Dikosongkan agar menggunakan path relatif
+
+      // --- STATE APLIKASI ---
+      let analysisData = null;
+      let tempFilename = null;
+      let currentOrderId = null;
+      let proofFile = null;
+      let selectedBranch = null;
+
+      // --- ELEMEN DOM ---
+      const stepperItems = document.querySelectorAll(".stepper-item");
+      const stepperLines = document.querySelectorAll(".stepper-line");
+      const uploadStep = document.getElementById("upload-step");
+      const detailsStep = document.getElementById("details-step");
+      const manualPaymentStep = document.getElementById("manual-payment-step");
+      const successStep = document.getElementById("success-step");
+
+      const dropArea = document.getElementById("drop-area");
+      const fileBtn = document.getElementById("file-btn");
+      const pdfFileInput = document.getElementById("pdfFile");
+      const uploadStatus = document.getElementById("upload-status");
+
+      const colorPagesCount = document.getElementById("color-pages-count");
+      const bwPagesCount = document.getElementById("bw-pages-count");
+      const totalPagesCount = document.getElementById("total-pages-count");
+
+      const copiesInput = document.getElementById("copies");
+      const decrCopiesBtn = document.getElementById("decr-copies");
+      const incrCopiesBtn = document.getElementById("incr-copies");
+      const finalTotal = document.getElementById("final-total");
+      const subtotalPrint = document.getElementById("subtotal-print");
+      const adminFee = document.getElementById("admin-fee");
+
+      const branchCards = document.querySelectorAll(".branch-card");
+      const grayscaleModeCheckbox = document.getElementById(
+        "grayscale-mode-checkbox"
+      );
+
+      const proceedToPaymentBtn = document.getElementById(
+        "proceed-to-payment-btn"
+      );
+      const finishPaymentBtn = document.getElementById("finish-payment-btn");
+      const newOrderBtn = document.getElementById("new-order-btn");
+
+      const notificationContainer = document.getElementById(
+        "notification-container"
+      );
+
+      const paymentMethodRadios = document.querySelectorAll(
+        'input[name="paymentMethod"]'
+      );
+      const bcaDetails = document.getElementById("bca-details");
+      const qrisDetails = document.getElementById("qris-details");
+
+      const displayOrderId = document.getElementById("display-order-id");
+      const displayTotalAmount = document.getElementById(
+        "display-total-amount"
+      );
+
+      const proofDropArea = document.getElementById("proof-drop-area");
+      const proofUploadInput = document.getElementById("proof-upload-input");
+      const proofUploadPlaceholder = document.getElementById(
+        "proof-upload-placeholder"
+      );
+      const proofPreviewContainer = document.getElementById(
+        "proof-preview-container"
+      );
+      const proofPreviewImg = document.getElementById("proof-preview-img");
+      const proofFilename = document.getElementById("proof-filename");
+
+      // --- EVENT LISTENERS ---
+      branchCards.forEach((card) => {
+        card.addEventListener("click", () => {
+          branchCards.forEach((c) => c.classList.remove("selected"));
+          card.classList.add("selected");
+          selectedBranch = card.dataset.branchName;
+        });
+      });
+
+      // PERUBAHAN: Event listener untuk checkbox grayscale
+      grayscaleModeCheckbox.addEventListener("change", calculateFinalCost);
+
+      fileBtn.addEventListener("click", () => pdfFileInput.click());
+      pdfFileInput.addEventListener("change", (e) =>
+        handleFile(e.target.files[0])
+      );
+      ["dragenter", "dragover", "dragleave", "drop"].forEach((eName) =>
+        dropArea.addEventListener(eName, preventDefaults, false)
+      );
+      ["dragenter", "dragover"].forEach((eName) =>
+        dropArea.addEventListener(
+          eName,
+          () => dropArea.classList.add("bg-indigo-100", "border-indigo-400"),
+          false
+        )
+      );
+      ["dragleave", "drop"].forEach((eName) =>
+        dropArea.addEventListener(
+          eName,
+          () => dropArea.classList.remove("bg-indigo-100", "border-indigo-400"),
+          false
+        )
+      );
+      dropArea.addEventListener(
+        "drop",
+        (e) => handleFile(e.dataTransfer.files[0]),
+        false
+      );
+
+      decrCopiesBtn.addEventListener("click", () => updateCopies(-1));
+      incrCopiesBtn.addEventListener("click", () => updateCopies(1));
+      copiesInput.addEventListener("input", calculateFinalCost);
+
+      proceedToPaymentBtn.addEventListener("click", handleProceedToPayment);
+      finishPaymentBtn.addEventListener("click", handleManualSubmit);
+      newOrderBtn.addEventListener("click", () => window.location.reload());
+
+      paymentMethodRadios.forEach((radio) => {
+        radio.addEventListener("change", (e) => {
+          if (e.target.value === "qris") {
+            qrisDetails.classList.remove("hidden");
+            bcaDetails.classList.add("hidden");
+          } else {
+            qrisDetails.classList.add("hidden");
+            bcaDetails.classList.remove("hidden");
+          }
+        });
+      });
+
+      proofDropArea.addEventListener("click", () => proofUploadInput.click());
+      proofUploadInput.addEventListener("change", (e) =>
+        handleProofFile(e.target.files[0])
+      );
+      ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
+        proofDropArea.addEventListener(eventName, preventDefaults, false);
+      });
+      proofDropArea.addEventListener("drop", (e) => {
+        handleProofFile(e.dataTransfer.files[0]);
+      });
+
+      // --- FUNGSI ---
+      function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+
+      function updateStepper(currentStep) {
+        const progressFill = document.getElementById("progress-fill");
+
+        stepperItems.forEach((step, index) => {
+          const stepNumber = index + 1;
+          const stepCounter = step.querySelector(".step-counter");
+
+          if (stepNumber < currentStep) {
+            stepCounter.classList.add("bg-indigo-600", "text-white");
+            stepCounter.classList.remove("bg-white", "text-slate-500");
+          } else if (stepNumber === currentStep) {
+            stepCounter.classList.add("bg-indigo-600", "text-white");
+            stepCounter.classList.remove("bg-white", "text-slate-500");
+          } else {
+            stepCounter.classList.remove("bg-indigo-600", "text-white");
+            stepCounter.classList.add("bg-white", "text-slate-500");
+          }
+        });
+
+        const progressPercentage =
+          currentStep === 1
+            ? 0
+            : ((currentStep - 1) / (stepperItems.length - 1)) * 100;
+        progressFill.style.width = `${progressPercentage}%`;
+        stepperItems.forEach((step, index) => {
+          const stepNumber = index + 1;
+          if (stepNumber < currentStep) {
+            step.classList.add("completed");
+            step.classList.remove("active");
+          } else if (stepNumber === currentStep) {
+            step.classList.add("active");
+            step.classList.remove("completed");
+          } else {
+            step.classList.remove("active", "completed");
+          }
+        });
+        stepperLines.forEach((line, index) => {
+          const lineNumber = index + 1;
+          if (lineNumber < currentStep) {
+            line.classList.add("completed");
+          } else {
+            line.classList.remove("completed");
+          }
+        });
+      }
+
+      function handleFile(file) {
+        if (!file || !file.type.includes("pdf")) {
+          showNotification(
+            "error",
+            "File tidak valid!",
+            "Silakan pilih file dengan format .pdf"
+          );
+          return;
+        }
+
+        const maxSize = 25 * 1024 * 1024; // 25 MB
+        if (file.size > maxSize) {
+          showNotification(
+            "error",
+            "Ukuran File Terlalu Besar",
+            "Ukuran file tidak boleh melebihi 25 MB."
+          );
+          return;
+        }
+
+        analyzeFile(file);
+      }
+
+      function handleProofFile(file) {
+        if (!file || !file.type.startsWith("image/")) {
+          showNotification(
+            "error",
+            "File bukti tidak valid",
+            "Harap unggah file gambar (PNG, JPG)."
+          );
+          return;
+        }
+        proofFile = file;
+        proofFilename.textContent = file.name;
+        proofPreviewImg.src = URL.createObjectURL(file);
+        proofUploadPlaceholder.classList.add("hidden");
+        proofPreviewContainer.classList.remove("hidden");
+      }
+
+      async function analyzeFile(file) {
+        const formData = new FormData();
+        formData.append("pdf", file);
+        uploadStatus.innerHTML = `<div class="flex items-center justify-center text-indigo-600"><svg class="animate-spin -ml-1 mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span>Menganalisis file...</span></div>`;
+        try {
+          const response = await fetch(`${API_URL}/analyze-pdf`, {
+            method: "POST",
+            body: formData,
+          });
+          if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.error || "Terjadi kesalahan di server.");
+          }
+          const data = await response.json();
+          analysisData = data;
+          tempFilename = data.tempFilename;
+
+          uploadStatus.innerHTML = "";
+          showNotification(
+            "success",
+            "Analisis Selesai!",
+            `Ditemukan ${analysisData.colorPages} halaman warna dan ${analysisData.bwPages} halaman B/W.`
+          );
+          setTimeout(displayDetails, 500);
+        } catch (error) {
+          console.error(error);
+          uploadStatus.innerHTML = "";
+          showNotification(
+            "error",
+            "Analisis Gagal",
+            "Gagal menghubungi server. Pastikan server berjalan dan coba lagi."
+          );
+        }
+      }
+
+      const formatRupiah = (number) =>
+        new Intl.NumberFormat("id-ID", {
+          style: "currency",
+          currency: "IDR",
+          minimumFractionDigits: 0,
+        }).format(number);
+
+      function displayDetails() {
+        uploadStep.classList.add("hidden");
+        detailsStep.classList.remove("hidden");
+        updateStepper(2);
+
+        colorPagesCount.textContent = analysisData.colorPages;
+        bwPagesCount.textContent = analysisData.bwPages;
+        totalPagesCount.textContent =
+          analysisData.colorPages + analysisData.bwPages;
+
+        document.getElementById("display-filename").textContent =
+          analysisData.originalName;
+
+        const colorRangeEl = document.getElementById("display-color-range");
+        if (analysisData.details && analysisData.details.colorPageRange) {
+          colorRangeEl.textContent = analysisData.details.colorPageRange;
+        } else {
+          colorRangeEl.textContent = "Tidak ada";
+        }
+
+        const bwRangeEl = document.getElementById("display-bw-range");
+        if (analysisData.details && analysisData.details.grayscalePageRange) {
+          bwRangeEl.textContent = analysisData.details.grayscalePageRange;
+        } else {
+          bwRangeEl.textContent = "Tidak ada";
+        }
+
+        calculateFinalCost();
+      }
+
+      function calculateFinalCost() {
+        if (!analysisData) return;
+        const copies = parseInt(copiesInput.value) || 1;
+        const isGrayscaleMode = grayscaleModeCheckbox.checked;
+        let currentDisplayColor = analysisData.colorPages;
+        let currentDisplayBw = analysisData.bwPages;
+        if (isGrayscaleMode) {
+          currentDisplayBw += currentDisplayColor;
+          currentDisplayColor = 0;
+        }
+        colorPagesCount.textContent = currentDisplayColor;
+        bwPagesCount.textContent = currentDisplayBw;
+        const printSubtotal =
+          (currentDisplayColor * HARGA_WARNA + currentDisplayBw * HARGA_BW) *
+          copies;
+        const totalKeseluruhan = printSubtotal + BIAYA_ADMIN;
+        subtotalPrint.textContent = formatRupiah(printSubtotal);
+        adminFee.textContent = formatRupiah(BIAYA_ADMIN);
+        finalTotal.textContent = formatRupiah(totalKeseluruhan);
+      }
+
+      function updateCopies(amount) {
+        let currentValue = parseInt(copiesInput.value) || 1;
+        currentValue += amount;
+        if (currentValue < 1) currentValue = 1;
+        copiesInput.value = currentValue;
+        calculateFinalCost();
+      }
+
+      function handleProceedToPayment() {
+        const nameInput = document.getElementById("name");
+        const phoneInput = document.getElementById("phone");
+
+        let isValid = true;
+        if (!nameInput.value.trim()) {
+          isValid = false;
+        }
+        if (!phoneInput.value.trim()) {
+          isValid = false;
+        }
+
+        if (!isValid) {
+          showNotification(
+            "error",
+            "Data Tidak Lengkap",
+            "Harap isi nama dan nomor WhatsApp."
+          );
+          return;
+        }
+
+        if (!selectedBranch) {
+          showNotification(
+            "error",
+            "Lokasi Belum Dipilih",
+            "Harap pilih salah satu cabang untuk pengambilan."
+          );
+          return;
+        }
+
+        currentOrderId = `PRINT-${Date.now()}`;
+        const totalAmount = finalTotal.textContent;
+
+        displayOrderId.textContent = currentOrderId;
+        displayTotalAmount.textContent = totalAmount;
+
+        detailsStep.classList.add("hidden");
+        manualPaymentStep.classList.remove("hidden");
+        updateStepper(2);
+      }
+
+      async function handleManualSubmit() {
+        if (!proofFile) {
+          showNotification(
+            "error",
+            "Bukti Pembayaran Diperlukan",
+            "Harap unggah screenshot bukti pembayaran Anda."
+          );
+          return;
+        }
+        finishPaymentBtn.textContent = "Mengirim...";
+        finishPaymentBtn.disabled = true;
+        const formData = new FormData();
+        const isGrayscaleMode = grayscaleModeCheckbox.checked;
+        const printMode = isGrayscaleMode ? "grayscale" : "color";
+        formData.append("orderId", currentOrderId);
+        formData.append(
+          "totalAmount",
+          finalTotal.textContent.replace(/[^0-9]/g, "")
+        );
+        formData.append("customerName", document.getElementById("name").value);
+        formData.append(
+          "customerPhone",
+          document.getElementById("phone").value
+        );
+        formData.append("colorPages", analysisData.colorPages);
+        formData.append("bwPages", analysisData.bwPages);
+        formData.append("printMode", printMode);
+        formData.append("copies", parseInt(copiesInput.value) || 1);
+        formData.append(
+          "paymentMethod",
+          document.querySelector('input[name="paymentMethod"]:checked').value
+        );
+        formData.append("tempFilename", tempFilename);
+        formData.append("originalName", analysisData.originalName);
+        formData.append("proof", proofFile);
+        formData.append(
+          "colorPageRange",
+          analysisData.details.colorPageRange || ""
+        );
+        formData.append(
+          "grayscalePageRange",
+          analysisData.details.grayscalePageRange || ""
+        );
+        formData.append("pickupLocation", selectedBranch);
+        try {
+          const response = await fetch(`${API_URL}/submit-manual-payment`, {
+            method: "POST",
+            body: formData,
+          });
+          if (!response.ok) {
+            const errData = await response.json();
+            throw new Error(errData.error || "Gagal mengirim pesanan.");
+          }
+          const result = await response.json();
+          showPaymentSuccess(result.orderData);
+        } catch (error) {
+          showNotification("error", "Terjadi Kesalahan", error.message);
+          finishPaymentBtn.textContent = "Selesai & Kirim Bukti";
+          finishPaymentBtn.disabled = false;
+        }
+      }
+
+      function showPaymentSuccess(orderData) {
+        manualPaymentStep.classList.add("hidden");
+        successStep.classList.remove("hidden");
+        updateStepper(3);
+
+        const params = new URLSearchParams();
+        params.append("orderId", orderData.orderId);
+        // PERBAIKAN: Menggunakan properti yang benar dari objek orderData
+        params.append("colorPages", orderData.colorPages);
+        params.append("bwPages", orderData.bwPages);
+        params.append("copies", orderData.copies);
+        params.append("totalAmount", orderData.grossAmount);
+        params.append("transactionTime", orderData.transactionTime);
+        params.append("originalName", orderData.originalName);
+        params.append("customerName", orderData.customerName);
+
+        setTimeout(() => {
+          const receiptUrl = new URL("receipt.html", window.location.href);
+          receiptUrl.search = params.toString();
+          window.location.href = receiptUrl.href;
+        }, 2000);
+      }
+
+      function showNotification(type, title, message) {
+        const colors = {
+          success: "bg-green-500",
+          error: "bg-red-500",
+          info: "bg-blue-500",
+        };
+        const icon = {
+          success:
+            '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',
+          error:
+            '<circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/>',
+          info: '<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>',
+        };
+        const notif = document.createElement("div");
+        notif.className = `notification ${colors[type]} text-white p-4 rounded-lg shadow-xl flex items-start`;
+        notif.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0 mr-3 mt-0.5">${icon[type]}</svg><div><h4 class="font-bold">${title}</h4><p class="text-sm">${message}</p></div>`;
+        notificationContainer.appendChild(notif);
+        setTimeout(() => {
+          notif.style.opacity = "0";
+          notif.style.transition = "opacity 0.5s ease";
+          setTimeout(() => notif.remove(), 500);
+        }, 5000);
+      }
+
+      function copyToClipboard(elementId, isCurrency = false) {
+        const element = document.getElementById(elementId);
+        let textToCopy = element.textContent;
+        if (isCurrency) {
+          textToCopy = textToCopy.replace(/[^0-9]/g, "");
+        }
+
+        navigator.clipboard
+          .writeText(textToCopy)
+          .then(() => {
+            showNotification(
+              "info",
+              "Disalin!",
+              `Teks "${textToCopy}" telah disalin ke clipboard.`
+            );
+          })
+          .catch((err) => {
+            console.error("Gagal menyalin: ", err);
+            showNotification(
+              "error",
+              "Gagal Menyalin",
+              "Tidak dapat menyalin teks."
+            );
+          });
+      }
+
+      updateStepper(1);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pembayaran Berhasil</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      // Konfigurasi kustom untuk Tailwind CSS
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              "brand-bg": "#2C1B3E",
+              "brand-bg-dark": "#1E122B",
+              "brand-text": "#FADFF0",
+              "brand-text-muted": "#D6BEE3",
+              "brand-highlight": "#B43F9C",
+              "brand-primary": "#F278C5",
+              "brand-secondary": "#2DD4BF",
+              "brand-danger": "#F47174",
+              "brand-warning": "#FACC15",
+              "brand-success": "#4ADE80",
+              "brand-info": "#60A5FA",
+            },
+          },
+        },
+      };
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=Space+Mono:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        overflow: hidden;
+      }
+
+      .receipt-font {
+        font-family: "Space Mono", monospace;
+      }
+
+      .flip-card-container {
+        perspective: 1000px;
+      }
+
+      .flip-card-inner {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        transition: transform 0.8s;
+        transform-style: preserve-3d;
+      }
+
+      .flip-card-container.is-flipped .flip-card-inner {
+        transform: rotateY(180deg);
+      }
+
+      .flip-card-front,
+      .flip-card-back {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        border-radius: 1.5rem;
+      }
+
+      .flip-card-back {
+        transform: rotateY(180deg);
+      }
+
+      /* --- Animasi Ikon Centang --- */
+      .success-checkmark {
+        width: 120px;
+        height: 120px;
+      }
+
+      .success-checkmark__circle {
+        stroke-dasharray: 166;
+        stroke-dashoffset: 166;
+        stroke-width: 3;
+        stroke-miterlimit: 10;
+        stroke: #4ade80; /* brand-success */
+        fill: none;
+        animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+      }
+
+      .success-checkmark__check {
+        transform-origin: 50% 50%;
+        stroke-dasharray: 48;
+        stroke-dashoffset: 48;
+        stroke-width: 3;
+        stroke: #4ade80; /* brand-success */
+        animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards,
+          pulse 1.5s ease-in-out 1.2s infinite;
+      }
+
+      @keyframes stroke {
+        100% {
+          stroke-dashoffset: 0;
+        }
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale3d(1, 1, 1);
+        }
+        50% {
+          transform: scale3d(1.05, 1.05, 1.05);
+        }
+      }
+      /* --- Akhir Perubahan Animasi --- */
+
+      .confetti-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        z-index: -1;
+      }
+
+      .confetti {
+        position: absolute;
+        width: 10px;
+        height: 20px;
+        background-color: hsl(0, 0, 100);
+        opacity: 0.7;
+        animation: fall 5s linear infinite;
+      }
+
+      @keyframes fall {
+        0% {
+          transform: translateY(-100px) rotateZ(0deg);
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(100vh) rotateZ(720deg);
+          opacity: 0;
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-brand-bg-dark flex items-center justify-center min-h-screen">
+    <div id="confetti-container" class="confetti-container"></div>
+
+    <div class="w-full max-w-md p-4">
+      <div
+        id="flipCard"
+        class="flip-card-container w-full h-[600px] cursor-pointer"
+        onclick="this.classList.toggle('is-flipped')"
+      >
+        <div class="flip-card-inner shadow-2xl rounded-3xl">
+          <div
+            class="flip-card-front bg-gradient-to-b from-brand-bg to-brand-bg-dark text-brand-text p-8 relative overflow-hidden flex flex-col justify-center items-center"
+          >
+            <div class="mb-8">
+              <svg
+                class="success-checkmark"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 52 52"
+              >
+                <circle
+                  class="success-checkmark__circle"
+                  cx="26"
+                  cy="26"
+                  r="25"
+                  fill="none"
+                />
+                <path
+                  class="success-checkmark__check"
+                  fill="none"
+                  d="M14.1 27.2l7.1 7.2 16.7-16.8"
+                />
+              </svg>
+            </div>
+
+            <!-- PERUBAHAN TEKS KARTU UCAPAN -->
+            <h1
+              id="thank-you-title"
+              class="text-4xl font-black text-center mb-4 drop-shadow-lg text-brand-text"
+            >
+              <!-- Akan diisi oleh JavaScript -->
+            </h1>
+            <p
+              id="thank-you-message-1"
+              class="text-xl text-center text-brand-text-muted"
+            >
+              Nilai kepercayaan adalah pegangan usaha kami.
+            </p>
+            <p
+              id="thank-you-message-2"
+              class="text-xl text-center text-brand-text-muted mt-1"
+            >
+              See you di outlet pengambilan pesanan!
+            </p>
+            <!-- AKHIR PERUBAHAN -->
+
+            <div
+              class="absolute bottom-8 text-xs text-center text-brand-text-muted/50"
+            >
+              <p>Click card to see the receipt</p>
+            </div>
+          </div>
+
+          <div
+            class="flip-card-back bg-white text-gray-800 p-0 receipt-font overflow-hidden"
+          >
+            <div class="w-full h-full flex flex-col">
+              <div class="bg-brand-bg-dark text-brand-text p-6">
+                <div class="flex justify-between items-center mb-4">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="40"
+                    height="40"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="text-brand-text"
+                  >
+                    <path
+                      d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
+                    ></path>
+                  </svg>
+                  <div>
+                    <p id="receipt-date" class="text-xs text-right">Date:</p>
+                  </div>
+                </div>
+                <div class="text-xs text-right text-brand-text-muted">
+                  <p id="receipt-transaction-time">Transaction Time:</p>
+                </div>
+              </div>
+
+              <div class="p-6 flex-grow bg-[#FDFBFE]">
+                <div
+                  class="flex justify-between border-b border-dashed border-gray-300 pb-2 mb-4 text-xs text-gray-500"
+                >
+                  <span>DESCRIPTION</span>
+                  <span>SUBTOTAL</span>
+                </div>
+
+                <div class="space-y-4 text-sm text-gray-800">
+                  <div
+                    id="receipt-color-pages"
+                    class="flex justify-between hidden"
+                  >
+                    <span>Cetak Warna</span>
+                    <span></span>
+                  </div>
+                  <div
+                    id="receipt-bw-pages"
+                    class="flex justify-between hidden"
+                  >
+                    <span>Cetak B/W</span>
+                    <span></span>
+                  </div>
+                </div>
+
+                <div class="border-t border-dashed border-gray-300 pt-4 mt-8">
+                  <div class="flex justify-between text-sm mb-2 text-gray-700">
+                    <span>SUBTOTAL PRINT</span>
+                    <span id="receipt-subtotal"></span>
+                  </div>
+                  <div class="flex justify-between text-sm mb-2 text-gray-700">
+                    <span>BIAYA ADMIN</span>
+                    <span id="receipt-admin-fee"></span>
+                  </div>
+                  <div
+                    class="flex justify-between font-bold text-lg bg-brand-bg-dark text-brand-text p-2 rounded mt-2"
+                  >
+                    <span>TOTAL</span>
+                    <span id="receipt-total"></span>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                class="text-center p-6 border-t-2 border-dashed border-gray-300 bg-[#FDFBFE]"
+              >
+                <h2
+                  class="text-2xl font-bold tracking-widest text-brand-bg-dark"
+                >
+                  THANK YOU!
+                </h2>
+                <p class="text-xs text-gray-500 mt-1">Admin : Yayan</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-center mt-6">
+        <button
+          id="new-order-button-receipt"
+          class="bg-brand-primary text-white font-semibold py-2 px-6 rounded-full shadow-lg hover:bg-brand-highlight hover:text-white transition-all duration-300"
+        >
+          Pesan Lagi
+        </button>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const confettiContainer = document.getElementById("confetti-container");
+        const confettiCount = 150;
+        const colors = [
+          "#F278C5",
+          "#B43F9C",
+          "#2DD4BF",
+          "#F47174",
+          "#FACC15",
+          "#4ADE80",
+          "#60A5FA",
+        ];
+
+        for (let i = 0; i < confettiCount; i++) {
+          const confetti = document.createElement("div");
+          confetti.classList.add("confetti");
+          confetti.style.left = `${Math.random() * 100}vw`;
+          confetti.style.top = `${Math.random() * -100}vh`;
+          confetti.style.backgroundColor =
+            colors[Math.floor(Math.random() * colors.length)];
+          confetti.style.animationDelay = `${Math.random() * 5}s`;
+          confetti.style.width = `${Math.floor(Math.random() * 8) + 5}px`;
+          confetti.style.height = `${Math.floor(Math.random() * 15) + 10}px`;
+          confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+          confettiContainer.appendChild(confetti);
+        }
+
+        const newOrderButtonReceipt = document.getElementById(
+          "new-order-button-receipt"
+        );
+        newOrderButtonReceipt.addEventListener("click", () => {
+          window.location.href = "/"; // Redirect to the main page
+        });
+
+        // Parse URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const orderId = urlParams.get("orderId");
+        const colorPages = parseInt(urlParams.get("colorPages")) || 0;
+        const bwPages = parseInt(urlParams.get("bwPages")) || 0;
+        const copies = parseInt(urlParams.get("copies")) || 1;
+        const totalAmount = parseInt(urlParams.get("totalAmount")) || 0;
+        const transactionTime = urlParams.get("transactionTime");
+        const originalName = urlParams.get("originalFileName");
+        // PERUBAHAN: Mengambil nama pelanggan dari URL
+        const customerName = urlParams.get("customerName") || "Pelanggan";
+
+        // PERUBAHAN: Mengupdate teks kartu ucapan
+        const thankYouTitle = document.getElementById("thank-you-title");
+        const firstName = customerName.split(" ")[0]; // Ambil nama pertama
+        thankYouTitle.textContent = `Makasi yaa, ${firstName}!`;
+
+        const formatRupiah = (number) =>
+          new Intl.NumberFormat("id-ID", {
+            style: "currency",
+            currency: "IDR",
+            minimumFractionDigits: 0,
+          }).format(number);
+
+        // Update receipt details
+        document.getElementById("receipt-date").textContent = `Date: ${new Date(
+          transactionTime
+        )
+          .toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          })
+          .toUpperCase()}`;
+        document.getElementById(
+          "receipt-transaction-time"
+        ).textContent = `Transaction Time: ${new Date(
+          transactionTime
+        ).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}`;
+
+        const HARGA_WARNA = 2000;
+        const HARGA_BW = 500;
+        const BIAYA_ADMIN = 0;
+
+        let subtotalItems = 0;
+
+        if (colorPages > 0) {
+          const colorCost = colorPages * HARGA_WARNA * copies;
+          document
+            .getElementById("receipt-color-pages")
+            .classList.remove("hidden");
+          document
+            .getElementById("receipt-color-pages")
+            .querySelector(
+              "span:first-child"
+            ).textContent = ` Warna (${colorPages} lbr x ${copies} rkp)`;
+          document
+            .getElementById("receipt-color-pages")
+            .querySelector("span:last-child").textContent =
+            formatRupiah(colorCost);
+          subtotalItems += colorCost;
+        }
+
+        if (bwPages > 0) {
+          const bwCost = bwPages * HARGA_BW * copies;
+          document
+            .getElementById("receipt-bw-pages")
+            .classList.remove("hidden");
+          document
+            .getElementById("receipt-bw-pages")
+            .querySelector(
+              "span:first-child"
+            ).textContent = `B/W (${bwPages} lbr x ${copies} rkp)`;
+          document
+            .getElementById("receipt-bw-pages")
+            .querySelector("span:last-child").textContent =
+            formatRupiah(bwCost);
+          subtotalItems += bwCost;
+        }
+
+        document.getElementById("receipt-subtotal").textContent =
+          formatRupiah(subtotalItems);
+        document.getElementById("receipt-admin-fee").textContent =
+          formatRupiah(BIAYA_ADMIN);
+        document.getElementById("receipt-total").textContent =
+          formatRupiah(totalAmount);
+      });
+    </script>
+  </body>
+</html>
